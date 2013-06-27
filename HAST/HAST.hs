@@ -1,13 +1,7 @@
 module HAST.HAST(AST(..),
                  ASTVar(..),
-                 existsMany,
-                 compileBDD) where
+                 existsMany) where
 
-import Control.Monad.State
-import Control.Monad.ST
-
-import CuddExplicitDeref
-import Interface
 
 -- f   == type of anonymous free variables 
 -- e   == type of variables bound by exists statements 
@@ -46,5 +40,4 @@ existsMany' (w:ws) vs f = Exists w (\x -> existsMany' ws (vs++[x]) f)
 --newtype TAST sp lp = TAST forall f e c . AST f e c (BAVar sp lp)
 --type TASTVar sp lp = forall f e   . ASTVar f e (BAVar sp lp)
 
-compileBDD :: STDdManager s u -> VarOps pdb v s u -> AST [DDNode s u] [DDNode s u] (DDNode s u) v -> StateT pdb (ST s) (DDNode s u)
-compileBDD = error "compileBDD not implemented"
+
