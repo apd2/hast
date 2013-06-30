@@ -6,6 +6,7 @@ import Control.Monad.State
 import Control.Monad.ST
 import Data.Bits
 
+import Util
 import CuddExplicitDeref
 import Interface
 import HAST.HAST
@@ -102,15 +103,21 @@ compileBDD m VarOps{..} = compile' where
     compile' (EqConst x c) = do
         x <- getAVar x
         lift $ computeCube m x $ take (length x) $ map (testBit c) [0..]
-    compile' (Exists w f)  = withTmpMany w $ \x -> do
+
+    compile' (Exists w f) | w <= 0    = error $ "compileBDD error: cannot quantify " ++ show w ++ " bits"
+                          | otherwise = withTmpMany w $ \x -> do
         res' <- compile' $ f x
-        xcube <- lift $ conj m x
+--        lift $ foldM (\r v -> do res <- bexists m r v
+--                                 deref m r
+--                                 return res) res' x
+        xcube <- lift $ nodesToCube m x
         res  <- lift $ bexists m res' xcube
         lift $ deref m xcube
         lift $ deref m res'
         return res
+    compile' (NExists _ w f) = compile' $ Exists w f
     compile' (Var x)       = do
-        (x:_) <- getAVar x
+        [x] <- getAVar x
         lift $ ref x
         return x
     compile' (Let x f)     = do
