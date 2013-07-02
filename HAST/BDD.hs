@@ -5,8 +5,9 @@ module HAST.BDD(compileBDD) where
 import Control.Monad.State
 import Control.Monad.ST
 import Data.Bits
+import Debug.Trace
 
-import Util
+import Util hiding (trace)
 import CuddExplicitDeref
 import Interface
 import HAST.HAST
@@ -102,7 +103,7 @@ compileBDD m VarOps{..} = compile' where
         lift $ xeqy m x y
     compile' (EqConst x c) = do
         x <- getAVar x
-        lift $ computeCube m x $ take (length x) $ map (testBit c) [0..]
+        lift $ computeCube m x $ bitsToBoolArrBe (length x) c
 
     compile' (Exists w f) | w <= 0    = error $ "compileBDD error: cannot quantify " ++ show w ++ " bits"
                           | otherwise = withTmpMany w $ \x -> do
@@ -115,7 +116,18 @@ compileBDD m VarOps{..} = compile' where
         lift $ deref m xcube
         lift $ deref m res'
         return res
-    compile' (NExists _ w f) = compile' $ Exists w f
+    compile' (NExists n w f) | w <= 0    = error $ "compileBDD error: cannot quantify " ++ show w ++ " bits"
+                             | otherwise = withTmpMany w $ \x -> do
+        res' <- compile' $ f x
+        xcube <- lift $ nodesToCube m x
+        --sz'  <- lift $ dagSize res'
+        --sup  <- lift $ supportIndices m res'
+        res  <- lift $ {-trace ("quantifying " ++ show n ++ " dagsize " ++ show sz' ++ " support " ++ (show (length sup))) $-} bexists m res' xcube
+        --sz   <- lift $ dagSize res
+        --trace ("dagsize after quantification " ++ show sz) $ return ()
+        lift $ deref m xcube
+        lift $ deref m res'
+        return res
     compile' (Var x)       = do
         [x] <- getAVar x
         lift $ ref x
