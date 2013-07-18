@@ -52,7 +52,7 @@ ccase m = go (bzero m) (bzero m)
 
 
 
-compileBDD :: STDdManager s u -> VarOps pdb v s u -> AST [DDNode s u] [DDNode s u] (DDNode s u) v -> StateT pdb (ST s) (DDNode s u)
+compileBDD :: (Show v) => STDdManager s u -> VarOps pdb v s u -> AST [DDNode s u] [DDNode s u] (DDNode s u) v -> StateT pdb (ST s) (DDNode s u)
 compileBDD m VarOps{..} = compile' where
     binOp func m x y = do
         x <- compile' x

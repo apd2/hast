@@ -81,7 +81,7 @@ printAST = prettyPrint' 0
         prettyPrint'' (EqVar v1 v2)         = text (pack (show v1)) <+> text "==" <+> text (pack (show v2))
         prettyPrint'' (EqConst v c)         = text (pack (show v)) <+> text "==" <+> text (pack (show c))
         prettyPrint'' (Exists   _ func)     = text "exists" <+> parens (text $ pack $ "tvar" ++ show ng) <+> lbrace <$$> (prettyPrint' (ng + 1) $ func (text $ pack $ "tvar" ++ show ng)) <$$> rbrace
-        prettyPrint'' (NExists n _ func)    = text "exists" <+> parens (text $ pack n) <+> lbrace <$$> (prettyPrint' (ng + 1) $ func (text $ pack n)) <$$> rbrace
+        prettyPrint'' (NExists n w func)    = text "exists" <+> parens ((text $ pack n) <+> (parens (text $ pack $ show w))) <+> lbrace <$$> (prettyPrint' (ng + 1) $ func (text $ pack n)) <$$> rbrace
         prettyPrint'' (Var v)               = text $ pack $ show v
         prettyPrint'' (Let x f)             = text "let" <+> text "tmp" <+> text ":=" <+> prettyPrint'' x <+> text "in" <$$> indent 2 (prettyPrint'' $ f (text "tmp"))
         prettyPrint'' (LetLit x)            = x
