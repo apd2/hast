@@ -1,4 +1,4 @@
-module HAST.Adam2Hast where
+module HAST.Adam2HAST where
 
 import Control.Arrow
 
