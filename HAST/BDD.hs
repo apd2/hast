@@ -52,8 +52,12 @@ ccase m = go (bzero m) (bzero m)
 
 
 
-compileBDD :: (Show v) => STDdManager s u -> VarOps pdb v s u -> AST [DDNode s u] [DDNode s u] (DDNode s u) v -> StateT pdb (ST s) (DDNode s u)
-compileBDD m VarOps{..} = compile' where
+compileBDD :: (Show v) => STDdManager s u 
+                       -> VarOps pdb v s u 
+                       -> (v -> Maybe String)                          -- returns BDD variable group tag for a variable
+                       -> AST [DDNode s u] [DDNode s u] (DDNode s u) v 
+                       -> StateT pdb (ST s) (DDNode s u)
+compileBDD m VarOps{..} ftag = compile' where
     binOp func m x y = do
         x <- compile' x
         y <- compile' y
@@ -64,7 +68,7 @@ compileBDD m VarOps{..} = compile' where
 
     getAVar (FVar f)       = return f
     getAVar (EVar e)       = return e
-    getAVar (NVar v)       = getVar v
+    getAVar (NVar v)       = getVar v (ftag v)
 
     withTmpMany n f = withTmpMany' [] n f
     withTmpMany' nodes 0 f = f nodes
