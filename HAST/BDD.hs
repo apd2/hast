@@ -8,7 +8,7 @@ import Data.Bits
 import Debug.Trace
 
 import Util hiding (trace)
-import CuddExplicitDeref
+import Cudd.Imperative
 import Interface
 import HAST.HAST
 
