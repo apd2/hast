@@ -9,7 +9,7 @@ import Debug.Trace
 
 import Util hiding (trace)
 import Cudd.Imperative
-import Interface
+import Synthesis.Interface
 import HAST.HAST
 
 block :: (STDdManager s u -> DDNode s u -> DDNode s u -> ST s (DDNode s u)) -> (STDdManager s u -> DDNode s u) -> STDdManager s u -> [DDNode s u] -> ST s (DDNode s u)
