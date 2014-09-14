@@ -19,6 +19,7 @@ library
   exposed-modules:     HAST.BDD, HAST.HAST
   -- other-modules:       
   other-extensions:    RecordWildCards, OverloadedStrings, PolymorphicComponents, FlexibleInstances
-  build-depends:       base >=4.6 && <4.8, mtl, cudd >=0.1 && <0.2, text >=1.1 && <1.2, wl-pprint-text, synthesis, util
+  build-depends:       base >=4.6 && <4.8, mtl, cudd >=0.1 && <0.2, text >=1.1 && <1.2, wl-pprint-text, synthesis, util, mmorph, containers
   -- hs-source-dirs:      
   default-language:    Haskell2010
+  ghc-options:         -O2
