@@ -38,27 +38,27 @@ conj, disj :: (RM s u t)
            => STDdManager s u 
            -> [DDNode s u] 
            -> t (ST s) (DDNode s u)
-conj = block band bone
-disj = block bor  bzero
+conj = block bAnd bOne
+disj = block bOr  bZero
 
 ccase :: (RM s u t) => STDdManager s u -> [(DDNode s u, DDNode s u)] -> t (ST s) (DDNode s u)
-ccase m = go (bzero m) (bzero m)
+ccase m = go (bZero m) (bZero m)
     where
     go accum neg [] = do
         $d (deref m) neg
         return accum
     go accum neg ((cond, cas): cs) = do
         --alive == cond, cas, accum, neg
-        econd  <- $r2 (band m) cond (bnot neg)
-        clause <- $r2 (band m) econd cas
+        econd  <- $r2 (bAnd m) cond (bNot neg)
+        clause <- $r2 (bAnd m) econd cas
         $d (deref m) econd
         $d (deref m) cas
         --alive == cond, accum, neg, clause
-        accum' <- $r2 (bor m) clause accum
+        accum' <- $r2 (bOr m) clause accum
         $d (deref m) accum
         $d (deref m) clause
         --alive == cond, neg, accum'
-        neg' <- $r2 (bor m) cond neg
+        neg' <- $r2 (bOr m) cond neg
         $d (deref m) cond
         $d (deref m) neg
         --alive == accum', neg'
@@ -112,18 +112,18 @@ compileBDD m VarOps{..} ftag = compile' where
              -> StateT pdb (t (ST s)) (DDNode s u)
 
     compile' T             = do
-        lift $ $rp ref $ (bone m :: DDNode s u)
-        return $ bone m
+        lift $ $rp ref $ (bOne m :: DDNode s u)
+        return $ bOne m
     compile' F             = do
-        lift $ $rp ref $ (bzero m :: DDNode s u)
-        return $ bzero m
-    compile' (Not x)       = liftM bnot $ compile' x
-    compile' (And x y)     = binOp band m x y
-    compile' (Or x y)      = binOp bor m x y
-    compile' (XNor x y)    = binOp bxnor m x y
+        lift $ $rp ref $ (bZero m :: DDNode s u)
+        return $ bZero m
+    compile' (Not x)       = liftM bNot $ compile' x
+    compile' (And x y)     = binOp bAnd m x y
+    compile' (Or x y)      = binOp bOr m x y
+    compile' (XNor x y)    = binOp bXnor m x y
     compile' (Imp x y)     = binOp bimp m x y
         where
-        bimp m x y = bor m (bnot x) y
+        bimp m x y = bOr m (bNot x) y
     compile' (Conj es)     = do
         es <- sequence $ map compile' es
         lift $ conj m es
@@ -141,7 +141,7 @@ compileBDD m VarOps{..} ftag = compile' where
     compile' (EqVar x y)   = do
         x <- getAVar x
         y <- getAVar y
-        lift $ $r $ xeqy m x y --TODO reference counting
+        lift $ $r $ xEqY m x y --TODO reference counting
     compile' (EqConst x c) = do
         x <- getAVar x
         lift $ $r $ computeCube m x $ bitsToBoolArrBe (length x) c --TODO reference counting
@@ -150,7 +150,7 @@ compileBDD m VarOps{..} ftag = compile' where
         | otherwise = withTmpMany w $ \x -> do
             res' <- compile' $ f x
             xcube <- lift $ $r $ nodesToCube m x --TODO reference counting
-            res  <- lift $ $r2 (bexists m) res' xcube
+            res  <- lift $ $r2 (bExists m) res' xcube
             lift $ $d (deref m) xcube
             lift $ $d (deref m) res'
             return res
@@ -159,7 +159,7 @@ compileBDD m VarOps{..} ftag = compile' where
         | otherwise = withTmpMany w $ \x -> do
             res' <- compile' $ f x
             xcube <- lift $ $r $ nodesToCube m x --TODO reference counting
-            res  <- lift $ $r2 (bexists m) res' xcube
+            res  <- lift $ $r2 (bExists m) res' xcube
             lift $ $d (deref m) xcube
             lift $ $d (deref m) res'
             return res
