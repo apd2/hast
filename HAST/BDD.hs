@@ -18,9 +18,9 @@ import Synthesis.RefineCommon
 import HAST.HAST
 
 block :: (RM s u t) => 
-         (STDdManager s u -> DDNode s u -> DDNode s u -> ST s (DDNode s u)) -> 
-         (STDdManager s u -> DDNode s u) -> 
-         STDdManager s u -> 
+         (DDManager s u -> DDNode s u -> DDNode s u -> ST s (DDNode s u)) -> 
+         (DDManager s u -> DDNode s u) -> 
+         DDManager s u -> 
          [DDNode s u] -> 
          t (ST s) (DDNode s u)
 block func s m nodes = do
@@ -35,13 +35,13 @@ block func s m nodes = do
         go accum' ns
 
 conj, disj :: (RM s u t) 
-           => STDdManager s u 
+           => DDManager s u 
            -> [DDNode s u] 
            -> t (ST s) (DDNode s u)
 conj = block bAnd bOne
 disj = block bOr  bZero
 
-ccase :: (RM s u t) => STDdManager s u -> [(DDNode s u, DDNode s u)] -> t (ST s) (DDNode s u)
+ccase :: (RM s u t) => DDManager s u -> [(DDNode s u, DDNode s u)] -> t (ST s) (DDNode s u)
 ccase m = go (bZero m) (bZero m)
     where
     go accum neg [] = do
@@ -65,7 +65,7 @@ ccase m = go (bZero m) (bZero m)
         go accum' neg' cs
 
 compileBDD' :: forall v s u pdb. (Show v) 
-           => STDdManager s u 
+           => DDManager s u 
            -> VarOps pdb v s u 
            -> (v -> Maybe String)                          -- returns BDD variable group tag for a variable
            -> AST [DDNode s u] [DDNode s u] (DDNode s u) v 
@@ -73,15 +73,15 @@ compileBDD' :: forall v s u pdb. (Show v)
 compileBDD' m vo ft ast = hoist (liftM fst . (runResource :: Monad m => InUse (DDNode s u) -> (ResourceT (DDNode s u)) m a -> m (a, InUse (DDNode s u))) Map.empty) $ (compileBDD m vo ft ast :: StateT pdb (ResourceT (DDNode s u) (ST s)) (DDNode s u))
 
 compileBDD :: forall v s u t pdb. (Show v, RM s u t) 
-           => STDdManager s u 
+           => DDManager s u 
            -> VarOps pdb v s u 
            -> (v -> Maybe String)                          -- returns BDD variable group tag for a variable
            -> AST [DDNode s u] [DDNode s u] (DDNode s u) v 
            -> StateT pdb (t (ST s)) (DDNode s u)
 compileBDD m VarOps{..} ftag = compile' where
 
-    binOp :: forall t. RM s u t => (STDdManager s u -> DDNode s u -> DDNode s u -> ST s (DDNode s u))
-          -> STDdManager s u 
+    binOp :: forall t. RM s u t => (DDManager s u -> DDNode s u -> DDNode s u -> ST s (DDNode s u))
+          -> DDManager s u 
           -> AST [DDNode s u] [DDNode s u] (DDNode s u) v
           -> AST [DDNode s u] [DDNode s u] (DDNode s u) v
           -> StateT pdb (t (ST s)) (DDNode s u)
